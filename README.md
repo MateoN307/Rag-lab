@@ -53,3 +53,13 @@ specs/      design specs for each stage, plus the AI collaboration rules
 scripts/    small helper/dev tools (e.g. test-fixture generators)
 tests/      fixtures and manual test data used by the app's _test_* functions
 ```
+
+## A note on personal paths
+
+This repo intentionally avoids hardcoding any machine-specific absolute paths
+(home directories, personal vault locations, etc.):
+- Paths to things that live *inside* the repo (like the test fixtures) are
+  computed relative to the source file itself.
+- Anything genuinely personal (e.g. the location of my Obsidian vault) is
+  read from a local `.env` file, which is gitignored. See `.env.example` for
+  the expected format — copy it to `.env` and fill in your own values.

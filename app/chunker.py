@@ -5,10 +5,16 @@ from dataclasses import dataclass
 CHUNK_SIZE = 400
 OVERLAP = 50
 
-FIND_MD_TEST_DIR = "/Users/mateo/Documents/Personal/LearningProjects/rag-vault/tests/chunker/1"
-MD_PARSER_TEST_DIR = "/Users/mateo/Documents/Personal/LearningProjects/rag-vault/tests/chunker/2"
-CHUNK_FILE_TEST_DIR = "/Users/mateo/Documents/Personal/LearningProjects/rag-vault/tests/chunker/3"
-CHUNK_DIR_TEST_DIR = "/Users/mateo/Documents/Personal/LearningProjects/rag-vault/tests/chunker/4"
+# Paths to the test fixtures, expressed relative to this file's location so
+# the test suite works regardless of where the repo is cloned to — and so
+# the source doesn't bake in any machine-specific directory structure.
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+TESTS_DIR = os.path.join(APP_DIR, "..", "tests", "chunker")
+
+FIND_MD_TEST_DIR = os.path.join(TESTS_DIR, "1")
+MD_PARSER_TEST_DIR = os.path.join(TESTS_DIR, "2")
+CHUNK_FILE_TEST_DIR = os.path.join(TESTS_DIR, "3")
+CHUNK_DIR_TEST_DIR = os.path.join(TESTS_DIR, "4")
 
 
 @dataclass

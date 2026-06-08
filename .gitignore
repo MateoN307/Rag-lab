@@ -8,3 +8,6 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Local machine-specific config (personal paths, etc.) — see .env.example
+.env
