@@ -82,7 +82,7 @@ and signature need to stay stable so the pipeline connects.
   own output before wiring it into Stage 2
 
 ## Vault location
-`/Users/mateo/Documents/Personal/myVault`
+Machine-specific, so it isn't in the repo: set `VAULT_PATH` in `.env` (see `.env.example`).
 
 ## A thing to keep an eye out for (you'll understand why once you hit Stage 2)
 Not every chunk of text is created equal once it gets to the embedding
