@@ -71,6 +71,8 @@ def chunk_file(file_path: str, source: str) -> list[Chunk]:
     return chunks
 
 
+#### Private helpers ####
+
 def _md_parser(text: str) -> str:
     """
     Take the full text of a file already confirmed to be markdown (.md) and

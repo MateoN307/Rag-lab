@@ -11,3 +11,6 @@ __pycache__/
 
 # Local machine-specific config (personal paths, etc.) — see .env.example
 .env
+
+# Persistent vector index — contains real embedded vault content
+app/db/
