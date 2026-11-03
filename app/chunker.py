@@ -68,6 +68,12 @@ def chunk_file(file_path: str, source: str) -> list[Chunk]:
         start += CHUNK_SIZE
         index += 1
 
+        # This chunk already reached the last word (or its slice ran past
+        # the end and got clipped), so any further chunk would only repeat
+        # words from this one's overlap.
+        if end >= total:
+            break
+
     return chunks
 
 
@@ -204,7 +210,9 @@ def _test_md_parser():
 
 def _test_chunk_file():
     """Edge cases to check: file shorter than one chunk, file spanning
-    multiple chunks (overlap correctness), empty/header-only file."""
+    multiple chunks (overlap correctness), empty/header-only file, and files
+    ending inside / exactly at / just past the first chunk (no duplicate
+    tail chunk made only of overlap words)."""
     cases = {
         "short.md": [
             Chunk(text="one two three four five", source="short.md", index=0),
@@ -226,6 +234,44 @@ def _test_chunk_file():
                 text=" ".join(f"word{i}" for i in range(801, 1001)),
                 source="multi_chunk.md",
                 index=2,
+            ),
+        ],
+        "overlap_420.md": [
+            Chunk(
+                text=" ".join(f"word{i}" for i in range(1, 421)),
+                source="overlap_420.md",
+                index=0,
+            ),
+        ],
+        "exact_450.md": [
+            Chunk(
+                text=" ".join(f"word{i}" for i in range(1, 451)),
+                source="exact_450.md",
+                index=0,
+            ),
+        ],
+        "one_over_451.md": [
+            Chunk(
+                text=" ".join(f"word{i}" for i in range(1, 451)),
+                source="one_over_451.md",
+                index=0,
+            ),
+            Chunk(
+                text=" ".join(f"word{i}" for i in range(401, 452)),
+                source="one_over_451.md",
+                index=1,
+            ),
+        ],
+        "over_461.md": [
+            Chunk(
+                text=" ".join(f"word{i}" for i in range(1, 451)),
+                source="over_461.md",
+                index=0,
+            ),
+            Chunk(
+                text=" ".join(f"word{i}" for i in range(401, 462)),
+                source="over_461.md",
+                index=1,
             ),
         ],
     }

@@ -81,6 +81,24 @@ and signature need to stay stable so the pipeline connects.
 - What you print/log when running the file directly, to sanity-check your
   own output before wiring it into Stage 2
 
+## Fix: duplicate tail chunk (November 2026)
+**Problem.** Each chunk is `words[start : start + 450]`, and the next one starts
+400 words later. The loop kept going while the next chunk's *start* was still
+inside the note, so a note ending 1 to 50 words past a multiple of 400 got an
+extra last chunk made only of words it already had. A 420-word note gave words
+1–420 and then 401–420 again. That chunk adds nothing, wastes an embedding
+call, and at query time it can take a top-k slot from a genuinely different
+chunk.
+
+**Fix.** After saving a chunk, stop if it reached the end of the note
+(`end >= total`). It's `>=` and not `==` because the slice silently clips when
+`end` runs past the list. The `while start < total` condition stays, since it's
+what makes an empty note produce zero chunks.
+
+**Tests.** `overlap_420` and `exact_450` fail on the old code and pass now.
+`one_over_451` and `over_461` are guards: a real second chunk must still be
+made.
+
 ## Vault location
 Machine-specific, so it isn't in the repo: set `VAULT_PATH` in `.env` (see `.env.example`).
 
