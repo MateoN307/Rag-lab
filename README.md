@@ -52,7 +52,7 @@ The full set of ground rules for this collaboration is written out in
 app/        the actual pipeline code (chunker.py, etc.)
 design/     design specs for each stage, plus the AI collaboration rules
 scripts/    small helper/dev tools (e.g. test-fixture generators)
-tests/      fixtures and manual test data used by the app's _test_* functions
+tests/      pytest tests (run with uv run pytest) and the fixture files they read
 ```
 
 ## A note on personal paths
