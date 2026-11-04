@@ -99,6 +99,29 @@ what makes an empty note produce zero chunks.
 `one_over_451` and `over_461` are guards: a real second chunk must still be
 made.
 
+## Redesign: one shared list of notes (November 2026)
+**Problem.** While designing Stage 3's `build_index`, the store needed the
+same list of notes as `chunk_dir`, with paths spelled exactly like each
+chunk's `source`. If they ever differ, every note looks both new and deleted
+on each run, and the whole vault gets re-embedded. That logic lived inside
+`chunk_dir`, so the store would have had to copy it, and two copies can drift
+apart.
+
+**Change.** The folder walk moved out of `chunk_dir` into a new public
+function, `find_md_files(dir_path)`, which returns every `.md` path relative
+to `dir_path`. Both `chunk_dir` and the store call it, so the set of notes and
+the path strings are defined in one place. The one-folder helper was renamed
+`_md_files_in_folder`, so the two names differ by more than an underscore. The
+"not a directory" check moved into `find_md_files`, so every caller gets it.
+The list of callers lives here rather than in the function's docstring, so
+the code's comments can't go stale as new callers appear.
+
+**Proof nothing changed.** It's a refactor: the existing `chunk_dir` tests
+pass unchanged, and on a real vault the old and new `chunk_dir` produce
+identical chunks. New tests cover what `find_md_files` adds: reaching every
+depth, backtracking out of dead-end folders into siblings, keeping same-named
+notes in different folders apart, and paths relative to the folder passed in.
+
 ## Vault location
 Machine-specific, so it isn't in the repo: set `VAULT_PATH` in `.env` (see `.env.example`).
 

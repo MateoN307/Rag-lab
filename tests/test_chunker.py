@@ -2,7 +2,14 @@ import os
 
 import pytest
 
-from chunker import Chunk, _find_md_files, _md_parser, chunk_dir, chunk_file
+from chunker import (
+    Chunk,
+    _md_files_in_folder,
+    _md_parser,
+    chunk_dir,
+    chunk_file,
+    find_md_files,
+)
 
 # Fixture folders live next to this file, so paths are computed relative to
 # it (no machine-specific paths, works wherever the repo is cloned).
@@ -272,13 +279,13 @@ def test_chunk_dir_empty_folder(tmp_path):
     assert chunk_dir(str(tmp_path)) == []
 
 
-#### _find_md_files ####
+#### _md_files_in_folder ####
 
 # Each case is (files to create, folders to create, expected .md names).
 # Everything is built inside tmp_path, a fresh empty folder per test, because
-# _find_md_files only looks at names and file/folder types, never contents.
+# _md_files_in_folder only looks at names and file/folder types, never contents.
 # Folders are created first, so a file can live inside one ("sub1/c.md").
-FIND_MD_FILES_CASES = {
+MD_FILES_IN_FOLDER_CASES = {
     "empty": ([], [], []),
     "only_dirs": ([], ["sub1", "sub2"], []),
     "dirs_and_other_files": (["image.png", "notes.txt"], ["sub1"], []),
@@ -290,19 +297,70 @@ FIND_MD_FILES_CASES = {
 
 @pytest.mark.parametrize(
     "files, dirs, expected",
-    FIND_MD_FILES_CASES.values(),
-    ids=FIND_MD_FILES_CASES.keys(),
+    MD_FILES_IN_FOLDER_CASES.values(),
+    ids=MD_FILES_IN_FOLDER_CASES.keys(),
 )
-def test_find_md_files(files, dirs, expected, tmp_path):
+def test_md_files_in_folder(files, dirs, expected, tmp_path):
     for name in dirs:
         (tmp_path / name).mkdir()
     for name in files:
         (tmp_path / name).write_text("")
 
-    result = _find_md_files(str(tmp_path))
+    result = _md_files_in_folder(str(tmp_path))
 
-    # _find_md_files returns full paths (folder + name), and os.listdir gives
+    # _md_files_in_folder returns full paths (folder + name), and os.listdir gives
     # entries in arbitrary order, so build the full expected paths and put
     # both lists in the same order before comparing.
     expected_paths = [os.path.join(str(tmp_path), name) for name in expected]
     assert sorted(result) == sorted(expected_paths)
+
+
+#### find_md_files ####
+
+# Each case is (folders to create, files to create, expected relative paths).
+# Built in tmp_path. Folders are listed parent-first so each one can be
+# created inside the previous. What's tested here is walking into folders and
+# the relative paths; which file types count is _md_files_in_folder's test.
+FIND_MD_FILES_CASES = {
+    "depth_0": ([], ["a.md"], ["a.md"]),
+    "depth_1": (["l1"], ["l1/a.md"], ["l1/a.md"]),
+    "depth_2": (["l1", "l1/l2"], ["l1/l2/a.md"], ["l1/l2/a.md"]),
+    "depth_3": (["l1", "l1/l2", "l1/l2/l3"], ["l1/l2/l3/a.md"], ["l1/l2/l3/a.md"]),
+    "dead_end_chain": (["l1", "l1/l2", "l1/l2/l3"], [], []),
+    "siblings_with_dead_end": (
+        ["x", "x/deep", "y"],
+        ["top.md", "x/a.md", "y/b.md"],
+        ["top.md", "x/a.md", "y/b.md"],
+    ),
+    "same_name_different_folders": (["sub"], ["a.md", "sub/a.md"], ["a.md", "sub/a.md"]),
+}
+
+
+@pytest.mark.parametrize(
+    "dirs, files, expected",
+    FIND_MD_FILES_CASES.values(),
+    ids=FIND_MD_FILES_CASES.keys(),
+)
+def test_find_md_files(dirs, files, expected, tmp_path):
+    for name in dirs:
+        (tmp_path / name).mkdir()
+    for name in files:
+        (tmp_path / name).write_text("")
+
+    # Order from os.walk is arbitrary, so compare sorted lists.
+    assert sorted(find_md_files(str(tmp_path))) == sorted(expected)
+
+
+def test_find_md_files_relative_to_given_folder(tmp_path):
+    """Paths are relative to the folder passed in, not to anything above it."""
+    (tmp_path / "top.md").write_text("")
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "c.md").write_text("")
+
+    assert find_md_files(str(tmp_path / "sub")) == ["c.md"]
+
+
+def test_find_md_files_rejects_missing_folder(tmp_path):
+    """A path that doesn't exist raises ValueError."""
+    with pytest.raises(ValueError, match="Not a directory"):
+        find_md_files(str(tmp_path / "does_not_exist"))

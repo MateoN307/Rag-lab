@@ -15,19 +15,33 @@ class Chunk:
 
 def chunk_dir(dir_path: str) -> list[Chunk]:
     """
-    Walk `dir_path`, process every .md file found (including subfolders),
-    and return a flat list of Chunk records.
+    Process every .md file under `dir_path` (including subfolders) and
+    return a flat list of Chunk records.
+    """
+    chunks = []
+    for source in find_md_files(dir_path):
+        file_path = os.path.join(dir_path, source)
+        chunks.extend(chunk_file(file_path, source))
+
+    return chunks
+
+
+def find_md_files(dir_path: str) -> list[str]:
+    """
+    Walk `dir_path` and every folder inside it, and return the path of each
+    .md file found, relative to `dir_path` (e.g. "plans/trip.md").
+
+    This is the single definition of "the notes under a folder".
     """
     if not os.path.isdir(dir_path):
         raise ValueError(f"Not a directory: {dir_path}")
 
-    chunks = []
+    sources = []
     for current_dir, _, _ in os.walk(dir_path):
-        for file_path in _find_md_files(current_dir):
-            source = os.path.relpath(file_path, dir_path)
-            chunks.extend(chunk_file(file_path, source))
+        for file_path in _md_files_in_folder(current_dir):
+            sources.append(os.path.relpath(file_path, dir_path))
 
-    return chunks
+    return sources
 
 
 def chunk_file(file_path: str, source: str) -> list[Chunk]:
@@ -100,12 +114,11 @@ def _md_parser(text: str) -> str:
     return " ".join(words)
 
 
-def _find_md_files(dir_path: str) -> list[str]:
+def _md_files_in_folder(dir_path: str) -> list[str]:
     """
-    Look inside `dir_path` only (not its subfolders — that's chunk_dir's
-    job) and return a flat list of full paths to every .md file directly
-    in it. Anything that isn't a .md file — including subdirectories — is
-    skipped.
+    Look inside `dir_path` only (not its subfolders) and return a flat
+    list of full paths to every .md file directly in it. Anything that
+    isn't a .md file — including subdirectories — is skipped.
     """
     md_files = []
     for entry in os.listdir(dir_path):
