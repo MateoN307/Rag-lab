@@ -37,6 +37,23 @@ def query_index(question: str, k: int = 5) -> list:
 
 #### Private helpers ####
 
+def _hash_file(path: str) -> str:
+    """Return the sha256 fingerprint (hex string) of the file's raw bytes."""
+    with open(path, "rb") as f:
+        data = f.read()
+    return hashlib.sha256(data).hexdigest()
+
+
+def _hash_notes(vault_path: str, sources: list[str]) -> dict[str, str]:
+    """
+    Return {source: fingerprint} with one entry per note in `sources`, where
+    each source is a path relative to `vault_path` (e.g. "plans/trip.md").
+    """
+    hashes = {}
+    for source in sources:
+        hashes[source] = _hash_file(os.path.join(vault_path, source))
+    return hashes
+
 
 #### Tests ####
 
