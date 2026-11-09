@@ -65,3 +65,71 @@ stay stable.
   what comes back, and what does the score look like compared to a real hit?
 - Try a query where the answer might be split across two notes/chunks —
   do both surface in your top-K?
+
+## Design decisions (November 2026)
+**Storage.** A persistent Chroma database in `db_dir` (default `app/db/`),
+collection `vault_chunks`, comparing vectors by **cosine** distance, so
+similarity = 1 − distance. A helper opens it when needed, never at import time
+(importing the store must not create a database). Each chunk is stored as id
+`"source#index"`, its vector from `embed_text` (not Chroma's built-in
+embedding model, so one place decides how text becomes a vector), its text,
+and metadata `{source, index, hash}`.
+
+**Not redoing work.** Every note gets a fingerprint: the sha256 of its raw
+bytes, stored in each of its chunks' metadata. Each run compares `on_disk`
+(`{source: hash}` for the notes from `find_md_files`, the shared note list
+from the Stage 1 redesign) with `in_store` (`{source: hash}` read from the
+stored metadata) and sorts each note into **unchanged** (skip), **edited**
+(delete its chunks, then add), **new** (add) or **deleted** (delete).
+- *Per note, not per chunk:* one edited word shifts every later chunk
+  boundary, so per-chunk comparison would flag almost everything anyway.
+- *Raw bytes, not cleaned text:* simpler, and the store doesn't depend on the
+  chunker's internals. The cost is that a frontmatter-only edit re-embeds that
+  note, and changes to the cleaning rules, chunk settings or embedding model
+  aren't detected. Those cases will be covered by a planned "rebuild
+  everything" option.
+- Renaming or moving a note shows up as one deleted plus one new note.
+
+**The comparison loop.** One loop over the union of both dicts' paths, looking
+each one up in both dicts. *Considered and rejected:* looping over `on_disk`
+while removing each path from `in_store`, then deleting whatever was left.
+It's correct, but it empties `in_store` as it goes and splits the rules across
+two places. Also rejected: a sorted merge walk over both lists, which needs
+sorting first, whereas dicts already give constant-time lookups.
+
+**Edited notes are deleted before being re-added**, because Chroma's `add()`
+silently ignores ids that already exist: without the delete, the old chunks
+would stay.
+
+**One `add` per note.** All of a note's chunks are embedded first, then stored
+in a single call. If anything fails mid-note, nothing of that note is stored,
+so the next run sees it as new and redoes it cleanly. This happened in
+practice: the first build crashed and left 90 notes stored, each one
+complete.
+
+**Oversized chunks.** When the model rejects a chunk as too long, the store
+re-chunks the *whole* note with `chunk_words × 0.75` and tries again
+(450 → 338 → 254 → …), down to a floor of 20 words. Only that specific error
+triggers a retry; any other error (for example, Ollama not running) stops the
+build as before. Different notes ending up with different chunk lengths is
+safe: fingerprints are per note, deletion is by source, ids are
+`source#index`, and cosine similarity doesn't depend on chunk length.
+*Considered and rejected:* a token-aware chunker (see Stage 1); lowering the
+chunk length for every note (changes all of them to fix two chunks); and
+embedding only the first part of an oversized chunk (the end of that chunk
+would never be found by search).
+
+**Inputs and summary.** `build_index(vault_path=VAULT_PATH, db_dir=DB_DIR)`:
+the defaults keep the original `build_index()` call working, and the
+parameters let tests use a temporary vault and database. A missing
+`VAULT_PATH` raises a clear error. It returns a summary: counts of `new`,
+`edited`, `deleted` and `unchanged` notes, plus `empty` (notes that produce no
+chunks), `shrunk` (`{path: chunk_words}` for notes that needed smaller chunks)
+and `too_dense` (notes that couldn't fit even at 20 words). Notes with no
+chunks count only as `empty`, so a run where nothing changed reports zero new,
+edited and deleted.
+
+**Planned after the MVP.** Separate knowledge sets: the parameters already
+allow one database per vault, and the rule to document is *one vault per
+database*, because pointing a second vault at the same database would delete
+the first vault's notes as "missing". Also the "rebuild everything" option.

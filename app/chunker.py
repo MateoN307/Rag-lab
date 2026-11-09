@@ -2,8 +2,11 @@ import os
 import re
 from dataclasses import dataclass
 
-CHUNK_SIZE = 400
-OVERLAP = 50
+# A word made only of "-", ":" and "|" with at least three dashes in a row.
+_SEPARATOR_WORD = re.compile(r"[-:|]*-{3,}[-:|]*")
+
+CHUNK_WORDS = 450  # full length of a chunk, in words
+OVERLAP_RATIO = 1 / 9  # share of a chunk repeated at the start of the next
 
 
 @dataclass
@@ -44,10 +47,13 @@ def find_md_files(dir_path: str) -> list[str]:
     return sources
 
 
-def chunk_file(file_path: str, source: str) -> list[Chunk]:
+def chunk_file(
+    file_path: str, source: str, chunk_words: int = CHUNK_WORDS
+) -> list[Chunk]:
     """
     Clean and split a single markdown file's contents into a list of
-    Chunk records.
+    Chunk records of up to `chunk_words` words each, where consecutive
+    chunks share round(chunk_words * OVERLAP_RATIO) words.
     """
     if not file_path.endswith(".md"):
         raise ValueError(f"Not a markdown file: {file_path}")
@@ -60,15 +66,17 @@ def chunk_file(file_path: str, source: str) -> list[Chunk]:
     words = text.split()
     total = len(words)
 
+    overlap = round(chunk_words * OVERLAP_RATIO)
+    step = chunk_words - overlap
+
     chunks = []
     start = 0
     index = 0
     while start < total:
-        end = start + CHUNK_SIZE + OVERLAP
-        chunk_words = words[start:end]
-        chunk_text = " ".join(chunk_words)
+        end = start + chunk_words
+        chunk_text = " ".join(words[start:end])
         chunks.append(Chunk(text=chunk_text, source=source, index=index))
-        start += CHUNK_SIZE
+        start += step
         index += 1
 
         # This chunk already reached the last word (or its slice ran past
@@ -91,6 +99,9 @@ def _md_parser(text: str) -> str:
         (`[[Note Name|Display]]` -> `Display`, `[[Note Name]]` -> `Note Name`)
       - the YAML frontmatter "header" block (the `---` ... `---` block at the
         very top, if present) is stripped
+      - words made only of `-`, `:` and `|` that contain a run of three or
+        more dashes (table separator rows like `| ------ | :---: |`, and
+        `---` dividers) are removed; table pipes and list bullets are kept
     The remaining text is normalized into a single whitespace-separated
     string (no newlines or extra whitespace).
     """
@@ -110,7 +121,7 @@ def _md_parser(text: str) -> str:
                 break
 
     text = "\n".join(lines)
-    words = text.split()
+    words = [word for word in text.split() if not _SEPARATOR_WORD.fullmatch(word)]
     return " ".join(words)
 
 

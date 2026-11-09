@@ -58,6 +58,15 @@ closely at *what kind of content* is in the chunk that's misbehaving versus
 ones that aren't. There's a real, explainable reason — bring back what you
 notice and we'll dig into the "why" together rather than me spoiling it now.
 
+## What we ran into (November 2026)
+Some chunks were rejected with "input length exceeds the context length". The
+model reads *tokens*, not words: common words are one token each, but rare
+strings are split into many. A table separator like `------` or a LaTeX
+expression like `\displaystyle\int_{-\infty}^{\infty}` counts as one "word"
+yet costs many tokens. Measured on the vault: a median of 1.92 tokens per
+word, with the densest chunks above 8. The fix lives in Stages 1 and 3 (see
+their design docs); `embed_text` itself is unchanged.
+
 ## Reference data point (for your own sanity-checking)
 A previous run produced: cat/mat vs feline/rug ≈ 0.72, vs stock market ≈ 0.39
 — related concepts scoring meaningfully higher than unrelated ones is the

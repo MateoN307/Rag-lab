@@ -2,7 +2,7 @@ import hashlib
 
 import pytest
 
-from store import _hash_file, _hash_notes
+from store import _db_hashes, _disk_hashes, _hash_file, _open_collection
 
 
 def sha256_of(data: bytes) -> str:
@@ -63,30 +63,86 @@ def test_hash_file_missing_file(tmp_path):
         _hash_file(str(tmp_path / "does_not_exist.md"))
 
 
-#### _hash_notes ####
+#### _disk_hashes ####
 
 
-def test_hash_notes_keys_and_own_hashes(tmp_path):
+def test_disk_hashes_keys_and_own_hashes(tmp_path):
     """Keys are the relative sources unchanged; each gets its own file's hash."""
     (tmp_path / "a.md").write_bytes(b"alpha")
     (tmp_path / "b.md").write_bytes(b"beta")
 
-    assert _hash_notes(str(tmp_path), ["a.md", "b.md"]) == {
+    assert _disk_hashes(str(tmp_path), ["a.md", "b.md"]) == {
         "a.md": sha256_of(b"alpha"),
         "b.md": sha256_of(b"beta"),
     }
 
 
-def test_hash_notes_nested_source(tmp_path):
+def test_disk_hashes_nested_source(tmp_path):
     """A source inside a subfolder is opened via the vault path."""
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "a.md").write_bytes(b"nested")
 
-    assert _hash_notes(str(tmp_path), ["sub/a.md"]) == {
+    assert _disk_hashes(str(tmp_path), ["sub/a.md"]) == {
         "sub/a.md": sha256_of(b"nested"),
     }
 
 
-def test_hash_notes_empty_list(tmp_path):
+def test_disk_hashes_empty_list(tmp_path):
     """No sources gives an empty dict."""
-    assert _hash_notes(str(tmp_path), []) == {}
+    assert _disk_hashes(str(tmp_path), []) == {}
+
+
+#### _open_collection ####
+
+
+def test_open_collection_uses_cosine(tmp_path):
+    """The collection compares vectors by cosine distance."""
+    collection = _open_collection(str(tmp_path / "db"))
+    assert collection.configuration["hnsw"]["space"] == "cosine"
+
+
+def test_open_collection_keeps_data_between_opens(tmp_path):
+    """Opening the same folder again gives back what was stored."""
+    db_dir = str(tmp_path / "db")
+    _open_collection(db_dir).add(
+        ids=["a.md#0"],
+        embeddings=[[1.0, 0.0]],
+        documents=["text"],
+        metadatas=[{"source": "a.md", "index": 0, "hash": "h1"}],
+    )
+    assert _open_collection(db_dir).get()["ids"] == ["a.md#0"]
+
+
+#### _db_hashes ####
+
+
+def add_fake_chunks(collection, chunks):
+    """Store (source, index, hash) entries with tiny made-up vectors."""
+    collection.add(
+        ids=[f"{source}#{index}" for source, index, _ in chunks],
+        embeddings=[[1.0, float(i)] for i in range(len(chunks))],
+        documents=["text"] * len(chunks),
+        metadatas=[
+            {"source": source, "index": index, "hash": hash_}
+            for source, index, hash_ in chunks
+        ],
+    )
+
+
+def test_db_hashes_one_entry_per_note(tmp_path):
+    """A note stored as several chunks appears once, with its hash."""
+    collection = _open_collection(str(tmp_path / "db"))
+    add_fake_chunks(
+        collection,
+        [
+            ("cats.md", 0, "h_cats"),
+            ("plans/trip.md", 0, "h_trip"),
+            ("plans/trip.md", 1, "h_trip"),
+        ],
+    )
+    assert _db_hashes(collection) == {"cats.md": "h_cats", "plans/trip.md": "h_trip"}
+
+
+def test_db_hashes_empty_collection(tmp_path):
+    """Nothing stored gives an empty dict."""
+    assert _db_hashes(_open_collection(str(tmp_path / "db"))) == {}

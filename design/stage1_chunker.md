@@ -122,6 +122,44 @@ identical chunks. New tests cover what `find_md_files` adds: reaching every
 depth, backtracking out of dead-end folders into siblings, keeping same-named
 notes in different folders apart, and paths relative to the folder passed in.
 
+## Redesign: chunk length as a parameter (November 2026)
+**Problem.** The first real Stage 3 build crashed: the embedding model accepts
+at most 2048 *tokens* (the subword pieces it actually reads), but chunks are
+measured in *words*. Typical notes run about 2 tokens per word, so a 450-word
+chunk is around 860 tokens. Dense content packs far more into each word:
+table separator rows and LaTeX math reached ~2259 and ~2076 tokens in two of
+323 chunks. Word-accurate splitting alone can't guarantee a chunk fits the
+model.
+
+**Change.** `chunk_file(file_path, source, chunk_words=CHUNK_WORDS)` takes the
+chunk length as an optional parameter. The constants are now
+`CHUNK_WORDS = 450` (the full chunk length) and `OVERLAP_RATIO = 1/9`;
+overlap = `round(chunk_words × OVERLAP_RATIO)` and each chunk starts
+`chunk_words − overlap` words after the previous one. At the default this
+gives exactly the old 400-word step with a 50-word overlap. The chunker still
+knows nothing about tokens: Stage 3 asks for smaller chunks when the model
+rejects one (see the Stage 3 design doc).
+
+**Considered and rejected: a token-aware chunker.** Ollama offers no way to
+count tokens before embedding, and a separate tokenizer only approximates the
+embedder's own count. Its safety margin would change with every model, and it
+would tie Stage 1 to one specific model.
+
+## Cleaning: table separator rows and dividers (November 2026)
+Words made only of `-`, `:` and `|` that contain a run of three or more
+dashes are removed. That covers table separator rows (`| ------ | :---: |`)
+and `---` dividers: pure formatting that cost one table-heavy chunk about 880
+tokens. Table pipes and list bullets are **kept**. They're cheap (about one
+token each) and keep the structure visible, both to the embedding and to the
+language model that reads the chunk in Stage 4.
+
+**Considered:** removing every word made only of `-`, `:`, `|` (bullets and
+pipes too), rejected because it loses the list and table structure. Also
+wrapping tables and lists in marker words (`[table] … [/table]`), postponed:
+it needs line-by-line parsing, a table split across two chunks would get only
+one of its markers, and the pipes already carry most of that signal. It's a
+candidate experiment for later.
+
 ## Vault location
 Machine-specific, so it isn't in the repo: set `VAULT_PATH` in `.env` (see `.env.example`).
 

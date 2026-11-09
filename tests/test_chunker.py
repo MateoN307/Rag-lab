@@ -98,6 +98,17 @@ def test_chunk_file(filename, expected):
     assert chunk_file(file_path, filename) == expected
 
 
+def test_chunk_file_custom_size():
+    """A smaller chunk_words gives shorter chunks with a proportional overlap:
+    100 words -> overlap round(100/9) = 11, so each chunk starts 89 later."""
+    chunks = chunk_file(os.path.join(CHUNK_FILE_TEST_DIR, "multi_chunk.md"), "m.md", 100)
+
+    assert len(chunks) == 12
+    assert chunks[0].text == " ".join(f"word{i}" for i in range(1, 101))
+    assert chunks[1].text.split()[0] == "word90"
+    assert chunks[-1].text.split()[-1] == "word1000"
+
+
 #### _md_parser ####
 
 # Edge cases: note with frontmatter, without frontmatter, with a body "---"
@@ -148,7 +159,7 @@ MD_PARSER_CASES = {
         ),
         (
             "# Sample note This note has no frontmatter, but uses a "
-            "horizontal rule divider below. --- This text comes after the "
+            "horizontal rule divider below. This text comes after the "
             "divider and should NOT be removed."
         ),
     ),
@@ -169,7 +180,7 @@ MD_PARSER_CASES = {
         ),
         (
             "# Sample note This note has frontmatter, and also a horizontal "
-            "rule divider further down. --- This text comes after the "
+            "rule divider further down. This text comes after the "
             "divider and should NOT be removed."
         ),
     ),
@@ -197,6 +208,25 @@ MD_PARSER_CASES = {
     "image_embed": (
         "Here is an image: ![[diagram.png]] and more text.\n",
         "Here is an image: and more text.",
+    ),
+    "table_separator_rows": (
+        (
+            "| Wood | Use |\n"
+            "| ---- | :---: |\n"
+            "| Oak | Armor |\n"
+        ),
+        (
+            "| Wood | Use | | | | | Oak | Armor |"
+        ),
+    ),
+    "list_bullets_kept": (
+        (
+            "- buy milk\n"
+            "- call home\n"
+        ),
+        (
+            "- buy milk - call home"
+        ),
     ),
     "mixed_links_embeds": (
         (
