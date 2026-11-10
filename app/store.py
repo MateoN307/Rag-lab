@@ -1,5 +1,6 @@
 import hashlib
 import os
+from dataclasses import dataclass
 
 import chromadb
 import ollama
@@ -20,6 +21,14 @@ SHRINK_FACTOR = 0.75
 MIN_CHUNK_WORDS = 20
 
 VAULT_PATH = os.environ.get("VAULT_PATH")
+
+
+@dataclass
+class SearchResult:
+    text: str
+    source: str
+    index: int
+    score: float
 
 
 def build_index(vault_path: str = VAULT_PATH, db_dir: str = DB_DIR) -> dict:
@@ -81,13 +90,33 @@ def build_index(vault_path: str = VAULT_PATH, db_dir: str = DB_DIR) -> dict:
     return summary
 
 
-def query_index(question: str, k: int = 5) -> list:
+def query_index(question: str, k: int = 5, db_dir: str = DB_DIR) -> list[SearchResult]:
     """
-    Embed `question`, retrieve the top-k most similar stored chunks,
-    and return them — each result needs to carry at least: the chunk
-    text, its source/position metadata, and a similarity score.
+    Embed `question` and return the `k` stored chunks closest to it, best
+    first, each with its text, source, index and cosine similarity score.
     """
-    pass
+    collection = _open_collection(db_dir)
+    response = collection.query(
+        query_embeddings=[embed_text(question)],
+        n_results=k,
+        include=["documents", "metadatas", "distances"],
+    )
+
+    # Each field is a list of lists: one inner list per query embedding, and
+    # we sent one, so [0]. Position i in the inner lists is the i-th result.
+    results = []
+    for text, metadata, distance in zip(
+        response["documents"][0], response["metadatas"][0], response["distances"][0]
+    ):
+        results.append(
+            SearchResult(
+                text=text,
+                source=metadata["source"],
+                index=metadata["index"],
+                score=1 - distance,
+            )
+        )
+    return results
 
 
 #### Private helpers ####
@@ -190,8 +219,24 @@ def _open_collection(db_dir: str):
     )
 
 
-#### Tests ####
-
+#### Debug tool ####
 
 if __name__ == "__main__":
-    pass
+    summary = build_index()
+    print(
+        f"Index: {summary['new']} new, {summary['edited']} edited, "
+        f"{summary['deleted']} deleted, {summary['unchanged']} unchanged, "
+        f"{len(summary['empty'])} empty"
+    )
+    if summary["shrunk"]:
+        print(f"Stored with smaller chunks: {summary['shrunk']}")
+    if summary["too_dense"]:
+        print(f"Too dense to store: {summary['too_dense']}")
+
+    while True:
+        question = input("\nQuestion (empty line to quit): ").strip()
+        if not question:
+            break
+        for result in query_index(question):
+            print(f"{result.score:.3f}  {result.source}#{result.index}")
+            print(f"       {result.text[:100]!r}")
