@@ -1,0 +1,293 @@
+[
+  {
+    "path": "School/Embedded Systems/Course summary - Embedded Systems.md",
+    "format": "YAML frontmatter; markdown tables with separator rows; wiki links; checklist",
+    "facts": [
+      "course: ENG-3C1 Embedded Systems",
+      "Midterm | 30% | 2026-10-29",
+      "Lectures run Monday and Wednesday, 10:00 to 11:20, room B-214.",
+      "Office hours: Thursdays 14:00 to 15:00 with Prof. Okafor."
+    ]
+  },
+  {
+    "path": "School/Embedded Systems/Lecture 04 - Interrupts.md",
+    "format": "fenced C code block; nested bullet lists; checklist; inline code; numbered list",
+    "facts": [
+      "On the test board it measured 12 cycles.",
+      "Clear the interrupt flag first, or the interrupt fires again forever.",
+      "volatile uint8_t rx_flag = 0;",
+      "Do not call blocking functions."
+    ]
+  },
+  {
+    "path": "School/Embedded Systems/Lab 2 - UART Logger.md",
+    "format": "image embed ![[uart-wiring.png]] (file intentionally absent); wiki link with display text; fenced C code; frontmatter",
+    "facts": [
+      "Baud rate: 115200",
+      "Buffer size: 256 bytes",
+      "PA9 is TX, goes to the RX pin of the USB-serial adapter",
+      "Dropped bytes must be counted and printed."
+    ]
+  },
+  {
+    "path": "School/Embedded Systems/Lecture 05 - Timers.md",
+    "format": "LaTeX inline and display math ($...$ and $$...$$); frontmatter; checklist",
+    "facts": [
+      "- $PSC = 47$",
+      "So the update event fires every 1 ms.",
+      "gives about 1022 Hz, not 1000 Hz.",
+      "PSC = 99 and ARR = 4999 at 48 MHz (answer: 96 Hz)"
+    ]
+  },
+  {
+    "path": "School/Operating Systems/Course summary - Operating Systems.md",
+    "format": "markdown tables with separator rows; wiki links to other notes; checklist",
+    "facts": [
+      "Instructor: Prof. Idris Calloway. Lectures: Tuesday and Thursday, 13:00 to 14:20, room C-101.",
+      "Final exam (2026-12-08) | 40%",
+      "The midterm covers weeks 1 to 7. Virtual memory is on the final only.",
+      "Assignments (4) | 20%"
+    ]
+  },
+  {
+    "path": "School/Operating Systems/Mutexes.md",
+    "format": "fenced C code blocks (including inline pseudo-code); inline code; wiki link with alias to Semaphores; section headings",
+    "facts": [
+      "Key rule: a mutex has an owner. Only the thread that locked it may unlock it.",
+      "pthread_mutex_lock(&account_lock);",
+      "Without the lock, two deposits can read the same balance, and one of the two writes is lost.",
+      "Use a spinlock only when the critical section is very short"
+    ]
+  },
+  {
+    "path": "School/Operating Systems/Semaphores.md",
+    "format": "bullet lists with bold terms; fenced pseudocode block without a language tag; wiki link with alias to Mutexes (closely related to Mutexes.md)",
+    "facts": [
+      "`empty` starts at 3 (free slots)",
+      "`full` starts at 0 (filled slots)",
+      "it starts at N. It limits how many threads can use a resource at the same time.",
+      "if the value is 0, block"
+    ]
+  },
+  {
+    "path": "School/Operating Systems/Lecture 09 - CPU Scheduling.md",
+    "format": "LONG note (1366 words); LaTeX display math; several markdown tables; nested lists; Python code block; checklist with mixed states; wiki links",
+    "facts": [
+      "Average waiting time: (0 + 24 + 27) / 3 = 17 ms",
+      "Average waiting time: (0 + 3 + 6) / 3 = 3 ms",
+      "Average waiting time: (6 + 4 + 7) / 3 = 5.67 ms",
+      "Average turnaround time: (30 + 7 + 10) / 3 = 15.67 ms"
+    ]
+  },
+  {
+    "path": "School/Operating Systems/Midterm study checklist.md",
+    "format": "checklist with mixed states; headings; plain text; no code",
+    "facts": [
+      "# Midterm study checklist (2026-10-22)",
+      "Covers weeks 1 to 7. Room C-101, 13:00.",
+      "Past midterm, question 5 (bounded buffer)",
+      "Office hours: Wednesday 15:00 to 16:00, Prof. Calloway's room"
+    ]
+  },
+  {
+    "path": "School/Signals and Systems/Course summary - Signals and Systems.md",
+    "format": "YAML frontmatter; markdown table; wiki links to other notes; first-person notes section",
+    "facts": [
+      "course: ENG-3S5 Signals and Systems",
+      "Final exam (2026-12-14) | 45%",
+      "Lectures: Monday and Friday, 09:00 to 10:20, room A-310.",
+      "Confusing the DFT and the DTFT cost me 4 marks on problem set 4."
+    ]
+  },
+  {
+    "path": "School/Signals and Systems/Fourier Series.md",
+    "format": "LaTeX display math ($$...$$) and inline math; formula-heavy; worked example; checklist",
+    "facts": [
+      "The DC term is the average value: $a_0 = 0.5$.",
+      "Even harmonics vanish for this duty cycle.",
+      "Derive $a_k$ for a duty cycle of 25%",
+      "Value is 1 for $|t| < 2\\ \\text{s}$ and 0 elsewhere in the period, centred on $t = 0$ (duty cycle 50%)."
+    ]
+  },
+  {
+    "path": "School/Signals and Systems/DFT vs DTFT.md",
+    "format": "LaTeX display math; closely related topics confused on purpose (DFT vs DTFT); worked example; bullet lists",
+    "facts": [
+      "Let $x[n] = [1, 1, 1, 1, 0, 0, 0, 0]$, so $N = 8$.",
+      "$X[0] = 1 + 1 + 1 + 1 = 4$",
+      "The DFT is the DTFT sampled at $N$ equally spaced frequencies.",
+      "Output: a continuous function of $\\omega$."
+    ]
+  },
+  {
+    "path": "School/Signals and Systems/Lecture 07 - Sampling.md",
+    "format": "LaTeX display math (Nyquist rule); numbered list; checklist; worked aliasing example",
+    "facts": [
+      "Tone: 3 kHz",
+      "Sampling rate: 4 kHz (below the Nyquist rate of 6 kHz)",
+      "The samples look exactly like a 1 kHz tone, because $|3 - 4| = 1$ kHz.",
+      "- [ ] Find the alias of a 7 kHz tone sampled at 10 kHz"
+    ]
+  },
+  {
+    "path": "School/Signals and Systems/Lecture 08 - Untitled.md",
+    "format": "completely empty note (0 bytes; no frontmatter, no text)",
+    "facts": []
+  },
+  {
+    "path": "Personal/Trip plan - Brightwater Islands.md",
+    "format": "markdown table with separator rows; checklist; numbered and nested lists; bold day labels",
+    "facts": [
+      "Dates: 2027-03-13 to 2027-03-19 (6 nights).",
+      "Flight, round trip (Corvane Air)",
+      "| Total | | 920 |",
+      "Hostel: Gull House, 6 nights"
+    ]
+  },
+  {
+    "path": "Personal/Budget 2027.md",
+    "format": "BIG note with several markdown tables (about 35 rows) with separator rows; bullet totals; no frontmatter",
+    "facts": [
+      "| 2027-01-01 | Rent, shared apartment | Housing | 650.00 |",
+      "Fixed costs: 650.00 + 14.00 + 38.00 + 45.00 + 60.00 + 25.00 + 12.99 = 844.99",
+      "Rent goes up by 25 dollars on 2027-07-01.",
+      "| 2027-02-26 | Haircut | Personal care | 30.00 |"
+    ]
+  },
+  {
+    "path": "Personal/Checklist de apartamento.md",
+    "format": "SPANISH note; checklist with nested bullets; numbered list; no frontmatter",
+    "facts": [
+      "Confirmar el depósito de seguridad: 850 dólares",
+      "Anotar la lectura del medidor de agua: 04521",
+      "Basura: los martes y viernes, antes de las 07:00.",
+      "Electricidad: cuenta a nombre de Sam Rivera desde el 2027-01-03"
+    ]
+  },
+  {
+    "path": "Personal/Goals 2027.md",
+    "format": "ONLY frontmatter (no body text after the closing ---)",
+    "facts": [
+      "status: draft",
+      "created: 2026-11-10",
+      "tags: [personal, goals]"
+    ]
+  },
+  {
+    "path": "Hobbies/Game guide - Starfall Caverns.md",
+    "format": "headings; nested bullet lists; checklist with nested items; numeric stats; invented game",
+    "facts": [
+      "Lantern fuel capacity: 100 units. Each oil flask refills 40.",
+      "- Health: 4,800",
+      "Recommended level: 14. Bring at least 5 oil flasks.",
+      "Oil flasks cost 12 gold at the Ferryman's stall in the Upper Hollow."
+    ]
+  },
+  {
+    "path": "Hobbies/Reading list.md",
+    "format": "YAML frontmatter; markdown table with separator rows; italic titles; checklist-like numbered list",
+    "facts": [
+      "| The Clockwork Orchard | Mira Okonkwo | finished 2026-05-19 | 5 |",
+      "Goal for 2027: finish 15 books, at least 4 in Spanish.",
+      "Finish *Cold Harbor Maps* by 2027-01-20.",
+      "the library's reading group meets on the first Thursday of each month, 18:30, room 2."
+    ]
+  },
+  {
+    "path": "Hobbies/Recipes/Recipe collection.md",
+    "format": "markdown table with separator rows; wiki links with display text ([[Sopa de lentejas|Lentil soup]]); checklist; image embed ![[recipes-photo-grid.png]] (file intentionally absent); links to 3 recipes in 2 languages",
+    "facts": [
+      "| [[Pancakes]] | 25 min | 2 | English |",
+      "Weigh flour in grams. Cups vary too much between recipes.",
+      "Photos of the finished dishes live in ![[recipes-photo-grid.png]].",
+      "- [ ] Maple syrup"
+    ]
+  },
+  {
+    "path": "Hobbies/Recipes/Pancakes.md",
+    "format": "YAML frontmatter; ingredient list with metric units; numbered steps; sub-headings",
+    "facts": [
+      "125 g all-purpose flour",
+      "Pour about 60 ml of batter per pancake.",
+      "Rest the batter for 10 minutes.",
+      "Flip when bubbles appear on the top and the edges look dry, about 2 minutes."
+    ]
+  },
+  {
+    "path": "Hobbies/Recipes/Sopa de lentejas.md",
+    "format": "SPANISH recipe; YAML frontmatter with Spanish keys; bullet and numbered lists; wiki link",
+    "facts": [
+      "300 g de lentejas secas",
+      "Cocinar tapado durante 35 minutos",
+      "Si la sopa queda muy espesa, agregar agua caliente de a 100 ml.",
+      "Mi abuela la servía con pan casero (ver [[Pan casero]])."
+    ]
+  },
+  {
+    "path": "Hobbies/Recipes/Pan casero.md",
+    "format": "SPANISH recipe with frontmatter; numbered steps; wiki link with alias to Recipe collection; degree sign and accents",
+    "facts": [
+      "500 g de harina de trigo",
+      "Hornear a 220 °C durante 35 minutos",
+      "Dejar reposar en un bol tapado, 90 minutos",
+      "Amasar 8 minutos hasta que la masa esté lisa y elástica."
+    ]
+  },
+  {
+    "path": "Reference/Cornell note-taking method.md",
+    "format": "how-to guide; numbered steps; bold labels; wiki link to a template note",
+    "facts": [
+      "6 inches (15.2 cm) wide, on the right.",
+      "2 inches (5 cm) tall, across the bottom.",
+      "Steps 2 and 4 force retrieval.",
+      "Time guide: 10 minutes for steps 2 and 3, 10 minutes for step 4, once a week per course."
+    ]
+  },
+  {
+    "path": "Reference/Git basics - part 1.md",
+    "format": "how-to reference; fenced bash code blocks; commit message rules; first half of a topic split across two notes (see part 2)",
+    "facts": [
+      "git switch -c feature/login",
+      "git commit -m \"Add ring buffer for UART input\"",
+      "First line: 50 characters or fewer, imperative mood",
+      "Body, if needed: why the change was made, wrapped at 72 characters."
+    ]
+  },
+  {
+    "path": "Reference/Git basics - part 2.md",
+    "format": "how-to reference; fenced bash code blocks; numbered steps; the second half of the split topic (updating a branch with main, which needs part 1 for context); wiki link to part 1",
+    "facts": [
+      "git push -u origin feature/login",
+      "git push --force-with-lease",
+      "Rule I follow: rebase your own unshared branch, never rebase a branch other people are working on.",
+      "This picks up from [[Git basics - part 1]], which covers commits and branches."
+    ]
+  },
+  {
+    "path": "Templates/Lecture note template.md",
+    "format": "template with placeholder fields only ({{...}}); YAML frontmatter with placeholders",
+    "facts": [
+      "course: {{course}}",
+      "tags: [{{tag}}]",
+      "## Still unclear"
+    ]
+  },
+  {
+    "path": "Templates/Recipe template.md",
+    "format": "template with placeholder fields only ({{...}}); YAML frontmatter with placeholders",
+    "facts": [
+      "time: {{prep_time}}",
+      "# {{recipe_name}}",
+      "serves: {{servings}}"
+    ]
+  },
+  {
+    "path": "Templates/Project template.md",
+    "format": "template with placeholder fields only ({{...}}); YAML frontmatter; placeholder table with separator row",
+    "facts": [
+      "status: {{status}}",
+      "| Date | Decision | Reason |",
+      "# {{project_name}}"
+    ]
+  }
+]

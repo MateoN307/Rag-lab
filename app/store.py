@@ -12,7 +12,8 @@ from embedder import embed_text
 load_dotenv()
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_DIR = os.path.join(APP_DIR, "db")
+# Database folder: DB_DIR from .env (one database per vault), else app/db.
+DB_DIR = os.environ.get("DB_DIR") or os.path.join(APP_DIR, "db")
 COLLECTION_NAME = "vault_chunks"
 
 # When the model rejects a chunk as too long, the note is re-chunked with

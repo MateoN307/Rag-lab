@@ -14,3 +14,7 @@ __pycache__/
 
 # Persistent vector index — contains real embedded vault content
 app/db/
+
+# Demo: generated index and evaluation results
+demo/db/
+demo/results/

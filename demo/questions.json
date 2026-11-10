@@ -1,0 +1,365 @@
+[
+  {
+    "id": "em-midterm",
+    "question": "when is the Embedded Systems midterm and how much is it worth?",
+    "kind": "answerable",
+    "sources": [
+      "School/Embedded Systems/Course summary - Embedded Systems.md"
+    ],
+    "key_facts": [
+      "2026-10-29",
+      "30%"
+    ],
+    "tests": "table + frontmatter"
+  },
+  {
+    "id": "interrupt-flag",
+    "question": "what must an interrupt handler do first so it doesn't fire forever?",
+    "kind": "answerable",
+    "sources": [
+      "School/Embedded Systems/Lecture 04 - Interrupts.md"
+    ],
+    "key_facts": [
+      "flag"
+    ],
+    "tests": "code note"
+  },
+  {
+    "id": "uart-config",
+    "question": "what baud rate and buffer size does the UART logger lab use?",
+    "kind": "answerable",
+    "sources": [
+      "School/Embedded Systems/Lab 2 - UART Logger.md"
+    ],
+    "key_facts": [
+      "115200",
+      "256"
+    ],
+    "tests": "dangling embed"
+  },
+  {
+    "id": "timer-psc",
+    "question": "what prescaler value does the timer use, and how often does the update event fire?",
+    "kind": "answerable",
+    "sources": [
+      "School/Embedded Systems/Lecture 05 - Timers.md"
+    ],
+    "key_facts": [
+      "47",
+      "1 ms"
+    ],
+    "tests": "LaTeX"
+  },
+  {
+    "id": "os-final",
+    "question": "when is the Operating Systems final, and how much is it worth?",
+    "kind": "answerable",
+    "sources": [
+      "School/Operating Systems/Course summary - Operating Systems.md"
+    ],
+    "key_facts": [
+      "2026-12-08",
+      "40%"
+    ],
+    "tests": "table"
+  },
+  {
+    "id": "mutex-owner",
+    "question": "who is allowed to unlock a mutex?",
+    "kind": "answerable",
+    "sources": [
+      "School/Operating Systems/Mutexes.md"
+    ],
+    "key_facts": [
+      "owner"
+    ],
+    "tests": "confusable with semaphores"
+  },
+  {
+    "id": "semaphore-empty",
+    "question": "in my bounded-buffer example, what does the empty semaphore start at?",
+    "kind": "answerable",
+    "sources": [
+      "School/Operating Systems/Semaphores.md"
+    ],
+    "key_facts": [
+      "starts at 3"
+    ],
+    "tests": "confusable with mutexes"
+  },
+  {
+    "id": "fcfs-wait",
+    "question": "what is the average waiting time for FCFS in the scheduling lecture?",
+    "kind": "answerable",
+    "sources": [
+      "School/Operating Systems/Lecture 09 - CPU Scheduling.md"
+    ],
+    "key_facts": [
+      "17 ms"
+    ],
+    "tests": "long note, 3 similar tables"
+  },
+  {
+    "id": "midterm-room",
+    "question": "what room and time is the OS midterm?",
+    "kind": "answerable",
+    "sources": [
+      "School/Operating Systems/Midterm study checklist.md"
+    ],
+    "key_facts": [
+      "C-101",
+      "13:00"
+    ],
+    "tests": "confusable with the lecture room"
+  },
+  {
+    "id": "ss-final",
+    "question": "when is the Signals and Systems final?",
+    "kind": "answerable",
+    "sources": [
+      "School/Signals and Systems/Course summary - Signals and Systems.md"
+    ],
+    "key_facts": [
+      "2026-12-14"
+    ],
+    "tests": "table"
+  },
+  {
+    "id": "dft-dtft",
+    "question": "how are the DFT and the DTFT related?",
+    "kind": "answerable",
+    "sources": [
+      "School/Signals and Systems/DFT vs DTFT.md"
+    ],
+    "key_facts": [
+      "sampled"
+    ],
+    "tests": "LaTeX, confusable"
+  },
+  {
+    "id": "aliasing",
+    "question": "what does a 3 kHz tone look like when sampled at 4 kHz?",
+    "kind": "answerable",
+    "sources": [
+      "School/Signals and Systems/Lecture 07 - Sampling.md"
+    ],
+    "key_facts": [
+      "1 kHz"
+    ],
+    "tests": "numbers"
+  },
+  {
+    "id": "fourier-dc",
+    "question": "what is the DC term of the square-wave Fourier series?",
+    "kind": "answerable",
+    "sources": [
+      "School/Signals and Systems/Fourier Series.md"
+    ],
+    "key_facts": [
+      "0.5"
+    ],
+    "tests": "formula-heavy"
+  },
+  {
+    "id": "trip-total",
+    "question": "how much does the Brightwater Islands trip cost in total?",
+    "kind": "answerable",
+    "sources": [
+      "Personal/Trip plan - Brightwater Islands.md"
+    ],
+    "key_facts": [
+      "920"
+    ],
+    "tests": "table total"
+  },
+  {
+    "id": "trip-dates",
+    "question": "when is the Brightwater Islands trip?",
+    "kind": "answerable",
+    "sources": [
+      "Personal/Trip plan - Brightwater Islands.md"
+    ],
+    "key_facts": [
+      "2027-03-13"
+    ],
+    "tests": "itinerary"
+  },
+  {
+    "id": "budget-fixed",
+    "question": "what are my total fixed costs in the 2027 budget?",
+    "kind": "answerable",
+    "sources": [
+      "Personal/Budget 2027.md"
+    ],
+    "key_facts": [
+      "844.99"
+    ],
+    "tests": "big table"
+  },
+  {
+    "id": "rent-increase",
+    "question": "when does my rent go up?",
+    "kind": "answerable",
+    "sources": [
+      "Personal/Budget 2027.md"
+    ],
+    "key_facts": [
+      "2027-07-01"
+    ],
+    "tests": "detail inside the big note"
+  },
+  {
+    "id": "deposito-es",
+    "question": "¿cuánto es el depósito de seguridad del apartamento?",
+    "kind": "answerable",
+    "sources": [
+      "Personal/Checklist de apartamento.md"
+    ],
+    "key_facts": [
+      "850"
+    ],
+    "tests": "Spanish"
+  },
+  {
+    "id": "boss-health",
+    "question": "how much health does the Starfall Caverns boss have?",
+    "kind": "answerable",
+    "sources": [
+      "Hobbies/Game guide - Starfall Caverns.md"
+    ],
+    "key_facts": [
+      "4,800"
+    ],
+    "tests": "game guide"
+  },
+  {
+    "id": "reading-goal",
+    "question": "how many books do I want to finish in 2027?",
+    "kind": "answerable",
+    "sources": [
+      "Hobbies/Reading list.md"
+    ],
+    "key_facts": [
+      "15 books"
+    ],
+    "tests": "table + goal line"
+  },
+  {
+    "id": "pancakes-flour",
+    "question": "how much flour do the pancakes need?",
+    "kind": "answerable",
+    "sources": [
+      "Hobbies/Recipes/Pancakes.md"
+    ],
+    "key_facts": [
+      "125 g"
+    ],
+    "tests": "recipe"
+  },
+  {
+    "id": "lentejas-es",
+    "question": "¿cuánto tiempo se cocinan las lentejas?",
+    "kind": "answerable",
+    "sources": [
+      "Hobbies/Recipes/Sopa de lentejas.md"
+    ],
+    "key_facts": [
+      "35 minutos"
+    ],
+    "tests": "Spanish; Pan casero also says 35 minutos"
+  },
+  {
+    "id": "git-branch-push",
+    "question": "how do I create a branch and push it to the remote for the first time?",
+    "kind": "answerable",
+    "sources": [
+      "Reference/Git basics - part 1.md",
+      "Reference/Git basics - part 2.md"
+    ],
+    "key_facts": [
+      "git switch -c",
+      "git push -u"
+    ],
+    "tests": "answer split across 2 notes"
+  },
+  {
+    "id": "rebase-rule",
+    "question": "when is it OK to rebase a branch?",
+    "kind": "answerable",
+    "sources": [
+      "Reference/Git basics - part 2.md"
+    ],
+    "key_facts": [
+      "unshared"
+    ],
+    "tests": "part 2 of the split"
+  },
+  {
+    "id": "medical-bp",
+    "question": "what is my blood pressure?",
+    "kind": "unanswerable",
+    "sources": [],
+    "key_facts": [],
+    "tests": "medical (excluded topic)"
+  },
+  {
+    "id": "car-model",
+    "question": "what car do I drive?",
+    "kind": "unanswerable",
+    "sources": [],
+    "key_facts": [],
+    "tests": "cars (excluded)"
+  },
+  {
+    "id": "sports-cup",
+    "question": "who won the last World Cup?",
+    "kind": "unanswerable",
+    "sources": [],
+    "key_facts": [],
+    "tests": "sports, general knowledge"
+  },
+  {
+    "id": "capital-canada",
+    "question": "what is the capital of Canada?",
+    "kind": "unanswerable",
+    "sources": [],
+    "key_facts": [],
+    "tests": "capitals, general knowledge"
+  },
+  {
+    "id": "capital-peru-es",
+    "question": "¿cuál es la capital de Perú?",
+    "kind": "unanswerable",
+    "sources": [],
+    "key_facts": [],
+    "tests": "capitals, in Spanish"
+  },
+  {
+    "id": "doctor-phone",
+    "question": "what's my doctor's phone number?",
+    "kind": "unanswerable",
+    "sources": [],
+    "key_facts": [],
+    "tests": "medical, personal-sounding"
+  },
+  {
+    "id": "goals-2027",
+    "question": "what are my goals for 2027?",
+    "kind": "answerable",
+    "sources": [
+      "Hobbies/Reading list.md"
+    ],
+    "key_facts": [
+      "15"
+    ],
+    "tests": "title matches an empty note (Goals 2027.md); the real answer is in another note"
+  },
+  {
+    "id": "ss-lecture-08",
+    "question": "what did I write in Signals and Systems lecture 08?",
+    "kind": "unanswerable",
+    "sources": [],
+    "key_facts": [],
+    "tests": "tricky: the note exists but is empty"
+  }
+]

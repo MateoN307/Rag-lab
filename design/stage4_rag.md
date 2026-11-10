@@ -83,9 +83,12 @@ median answerable question's top score was 0.630, mostly because a Spanish
 question scores high against any Spanish note.
 
 **Model, prompt and k were chosen by measurement** (see the Stage 5
-results): `llama3.1:8b` over `llama3.2` (3B); prompt v2 as the default,
-trading about 7 points of key facts for perfect Sources formatting and twice
-as many honest "Sources: none"; and k = 5 over 3 and 10.
+results): `llama3.1:8b` over `llama3.2` (3B); k = 5 over 3 and 10; and prompt v3 as
+the default. v3 is v1's rules with only the Sources rule replaced by v2's
+literal template, and it gave the best overall balance: 77% of key facts, 94%
+correctly formatted Sources sections and the most honest "Sources: none"
+(62%). v2 reached perfect formatting but lost content; v1 had the most
+content but the least honest Sources sections.
 
 **Context window 16,384 tokens.** Ollama's default of 4,096 silently cut the
 longest prompts, starting from the beginning, which is where the rules are.

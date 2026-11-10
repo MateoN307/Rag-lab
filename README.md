@@ -86,7 +86,7 @@ Measured on 32 questions about my notes (24 answerable, 8 not):
 |---|---|
 | Search finds a right note in the top 5 | 83% of answerable questions |
 | Key facts in the answer, when search found the note | 94% (`llama3.1:8b`, prompt v1) |
-| Answers ending in a correct Sources section | 100% (prompt v2, the default) |
+| Answers ending in a correct Sources section | 94% (prompt v3, the default; 100% with v2) |
 | Questions the notes can't answer, admitted as such | 100% |
 
 What measuring taught me:
@@ -95,9 +95,45 @@ What measuring taught me:
   reach 100% correctly formatted sources.
 - **More context isn't better.** Five excerpts beat three (missing facts) and
   ten (the model lost focus).
+- **The model's capacity is now the ceiling.** Every prompt or context change
+  traded one score for another; none improved them all at once. The next
+  gains need a larger model or better search.
 - **Silent failures hide in the plumbing.** Ollama's default context window
   was quietly cutting the longest prompts, instructions included. Fixing it,
   and flagging truncation, raised the format score from 94% to 100%.
+
+## Try it with the demo vault
+
+`demo/vault/` holds 30 invented notes (a fictional engineering student's
+courses, plans, recipes and guides, a few in Spanish) and
+`demo/questions.json` holds 32 evaluation questions about them, so anyone can
+reproduce the results. The demo gets its own database folder; never point two
+vaults at the same one, or the second build deletes the first vault's notes.
+
+```
+VAULT_PATH=demo/vault DB_DIR=demo/db SKIP_FOLDERS=Templates uv run python app/rag.py
+```
+
+Run that once to build the demo index (and ask it questions), then score it:
+
+```
+VAULT_PATH=demo/vault DB_DIR=demo/db SKIP_FOLDERS=Templates EVAL_PATH=demo/questions.json uv run python scripts/evaluate.py --name demo --answers
+```
+
+| | Demo vault | My real vault |
+|---|---|---|
+| Right note in the top 5 | 96% | 83% |
+| MRR | 0.844 | 0.605 |
+| Key facts in the answer | 81% | 77% |
+| Correct Sources section | 94% | 94% |
+| Unanswerable questions admitted | 100% | 100% |
+
+Search does much better on the demo because invented notes are tidy and
+on-topic, while real notes mix languages, tables, HTML and half-finished
+drafts. That gap is why thresholds and tuning should be measured on real
+notes. Key facts are matched word for word, so the 81% undercounts: three
+more answers were correct but phrased differently (for example "July 1,
+2027" for 2027-07-01).
 
 ## Project layout
 

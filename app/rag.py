@@ -95,7 +95,7 @@ _PROMPT_V3 = _PROMPT_V1.replace(_V1_RULE_6, _V2_RULE_6)
 # System prompts by version name; DEFAULT_PROMPT_VERSION is what answer() uses
 # unless told otherwise.
 PROMPTS = {"v1": _PROMPT_V1, "v2": _PROMPT_V2, "v3": _PROMPT_V3}
-DEFAULT_PROMPT_VERSION = "v2"
+DEFAULT_PROMPT_VERSION = "v3"
 
 
 @dataclass
