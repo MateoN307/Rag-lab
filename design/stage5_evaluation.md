@@ -86,6 +86,11 @@ by hand.
 
 ## Polish before calling the project done
 - Ctrl+C and Ctrl+D exit cleanly instead of showing a traceback.
+- A setting listing folders to leave out of the index (default: the templates
+  folder), applied in `find_md_files` so the chunker and the store both respect
+  it. Measured: leaving the templates out didn't change hit@5, hit@10 or MRR,
+  but removed 6 template chunks from the top-5 context, mostly for questions
+  the vault can't answer.
 - README: how to set it up and run it, the status of each stage, and a
   summary of the results.
 - A design-decisions section for Stage 4.

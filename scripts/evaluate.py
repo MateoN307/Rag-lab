@@ -23,6 +23,9 @@ ADMIT_PHRASES = [
     "no encontré",
     "no pude encontrar",
     "probablemente no sea lo que",
+    "no information",
+    "no direct mention",
+    "nothing directly related",
 ]
 _SOURCES_SECTION = re.compile(r"sources:\s*(none\b|\n\s*\[\d+\])", re.IGNORECASE)
 _SOURCES_NONE = re.compile(r"sources:\s*none\b", re.IGNORECASE)

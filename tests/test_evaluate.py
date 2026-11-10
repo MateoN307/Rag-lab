@@ -57,6 +57,11 @@ ADMIT_CASES = {
         True,
         False,
     ),
+    "says_there_is_no_information": (
+        "There's no information about the library hours in these excerpts.",
+        True,
+        False,
+    ),
     "admits_but_lists_sources": ("I could not find it.\n\nSources:\n[2] trust: low", True, False),
     "answers_anyway": ("France won the 1998 World Cup.", False, False),
 }
