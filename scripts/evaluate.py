@@ -26,6 +26,8 @@ ADMIT_PHRASES = [
     "no information",
     "no direct mention",
     "nothing directly related",
+    "doesn't mention",
+    "does not mention",
 ]
 _SOURCES_SECTION = re.compile(r"sources:\s*(none\b|\n\s*\[\d+\])", re.IGNORECASE)
 _SOURCES_NONE = re.compile(r"sources:\s*none\b", re.IGNORECASE)
