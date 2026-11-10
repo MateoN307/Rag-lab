@@ -88,6 +88,7 @@ def answer_summary(rows: list[dict]) -> dict:
         "sources_format": sum(r["checks"]["sources_format"] for r in rows) / len(rows),
         "unanswerable_admitted": sum(r["checks"]["admitted"] for r in unanswerable) / len(unanswerable),
         "unanswerable_sources_none": sum(r["checks"]["sources_none"] for r in unanswerable) / len(unanswerable),
+        "truncated": sum(r.get("truncated", False) for r in rows),
     }
 
 
@@ -130,6 +131,7 @@ def run_answers(questions: list[dict], args) -> list[dict]:
             "kind": q["kind"],
             "key_facts": q["key_facts"],
             "answer": reply.text,
+            "truncated": reply.truncated,
             "checks": answer_checks(reply.text, q["kind"], q["key_facts"]),
         })
     return rows
@@ -145,7 +147,8 @@ def print_scorecard(name: str, retrieval: dict, answers: dict | None, review: li
         print(
             f"Answers:   key facts {answers['key_fact_recall']:.0%}  sources format {answers['sources_format']:.0%}  "
             f"unanswerable admitted {answers['unanswerable_admitted']:.0%}  "
-            f"'Sources: none' {answers['unanswerable_sources_none']:.0%}"
+            f"'Sources: none' {answers['unanswerable_sources_none']:.0%}  "
+            f"truncated {answers['truncated']}"
         )
         print(f"  review by hand: {', '.join(review) if review else 'nothing flagged'}")
 

@@ -4,7 +4,10 @@ import ollama
 
 from store import DB_DIR, SearchResult, build_index, query_index
 
-GENERATION_MODEL = "llama3.2"
+GENERATION_MODEL = "llama3.1:8b"
+
+# Tokens the model reads at once (system prompt + excerpts + question).
+CONTEXT_WINDOW = 16384
 
 # A chunk whose score is at least HIGH_MATCH is a "high" match, at least
 # MEDIUM_MATCH a "medium" match, and anything lower a "low" match.
@@ -88,6 +91,7 @@ DEFAULT_PROMPT_VERSION = "v2"
 class Answer:
     text: str
     sources: list[SearchResult]
+    truncated: bool  # True if the prompt didn't fit in CONTEXT_WINDOW
 
 
 def answer(
@@ -109,9 +113,13 @@ def answer(
             {"role": "system", "content": PROMPTS[prompt_version]},
             {"role": "user", "content": _build_user_message(question, sources)},
         ],
-        options={"temperature": 0},
+        options={"temperature": 0, "num_ctx": CONTEXT_WINDOW},
     )
-    return Answer(text=response["message"]["content"], sources=sources)
+    return Answer(
+        text=response["message"]["content"],
+        sources=sources,
+        truncated=response["prompt_eval_count"] >= CONTEXT_WINDOW,
+    )
 
 
 #### Private helpers ####
@@ -161,4 +169,6 @@ if __name__ == "__main__":
                 f"  [{number}] {source.score:.3f} ({_match_level(source.score)}) "
                 f"{source.source}#{source.index}"
             )
+        if result.truncated:
+            print("\nWarning: the prompt was cut to fit the context window.")
         print(f"\nAnswer:\n{result.text}")

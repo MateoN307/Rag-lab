@@ -100,5 +100,6 @@ def test_answer_summary_and_flagged():
         "sources_format": 0.5,
         "unanswerable_admitted": 0.5,
         "unanswerable_sources_none": 0.5,
+        "truncated": 0,
     }
     assert flagged(rows) == ["b", "d"]

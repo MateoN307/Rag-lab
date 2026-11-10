@@ -69,7 +69,7 @@ def test_answer_sends_rules_and_excerpts_and_returns_both(monkeypatch):
 
     def fake_chat(model, messages, options):
         sent.update(model=model, messages=messages, options=options)
-        return {"message": {"content": "The ferry is at 9."}}
+        return {"message": {"content": "The ferry is at 9."}, "prompt_eval_count": 120}
 
     monkeypatch.setattr(rag, "query_index", fake_query_index)
     monkeypatch.setattr(rag.ollama, "chat", fake_chat)
@@ -79,9 +79,24 @@ def test_answer_sends_rules_and_excerpts_and_returns_both(monkeypatch):
     assert reply.text == "The ferry is at 9."
     assert reply.sources == found
     assert sent["model"] == rag.GENERATION_MODEL
-    assert sent["options"] == {"temperature": 0}
+    assert sent["options"] == {"temperature": 0, "num_ctx": rag.CONTEXT_WINDOW}
+    assert reply.truncated is False
     assert sent["messages"][0] == {
         "role": "system",
         "content": rag.PROMPTS[rag.DEFAULT_PROMPT_VERSION],
     }
     assert sent["messages"][1]["content"].endswith("Question: When is the ferry?")
+
+
+def test_answer_flags_truncated_prompt(monkeypatch):
+    """A prompt that filled the whole context window is reported as truncated."""
+    monkeypatch.setattr(rag, "query_index", lambda question, k, db_dir: [])
+    monkeypatch.setattr(
+        rag.ollama,
+        "chat",
+        lambda model, messages, options: {
+            "message": {"content": "..."},
+            "prompt_eval_count": rag.CONTEXT_WINDOW,
+        },
+    )
+    assert rag.answer("Anything?").truncated is True
