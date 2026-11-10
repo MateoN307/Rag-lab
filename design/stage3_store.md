@@ -129,7 +129,25 @@ and `too_dense` (notes that couldn't fit even at 20 words). Notes with no
 chunks count only as `empty`, so a run where nothing changed reports zero new,
 edited and deleted.
 
-**Planned after the MVP.** Separate knowledge sets: the parameters already
-allow one database per vault, and the rule to document is *one vault per
-database*, because pointing a second vault at the same database would delete
-the first vault's notes as "missing". Also the "rebuild everything" option.
+## Future work (after the MVP)
+- **Evaluation set.** 20–30 questions, each paired with the note that should
+  answer it, plus questions the vault can't answer. Every retrieval change
+  gets measured against it. Four test questions showed why: a change that
+  helped one question hurt another.
+- **Relevance threshold.** Search always returns `k` chunks, even for
+  questions the vault can't answer: real hits scored about 0.57–0.63,
+  unanswerable questions about 0.44–0.48. The cutoff should be chosen from
+  the evaluation set's scores, on the real notes rather than invented ones,
+  since scores depend on the kind of text.
+- **Retrieval improvements to measure:** stripping HTML tags, starting each
+  chunk with its note's title, the model's task prefixes, and hybrid search
+  (vectors plus keyword matching) for notes whose meaning is mostly names,
+  such as checklists and tables.
+- **A demo vault** of invented notes, so the project can be cloned and run
+  without a personal vault, and experiments are repeatable.
+- **Separate knowledge sets:** the parameters already allow one database per
+  vault. The rule to document is *one vault per database*, because pointing a
+  second vault at the same database would delete the first vault's notes as
+  "missing".
+- **A "rebuild everything" option**, for changes the fingerprints can't
+  detect (cleaning rules, chunk settings, embedding model).
