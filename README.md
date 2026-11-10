@@ -153,3 +153,7 @@ This repo intentionally avoids hardcoding any machine-specific absolute paths
 - Anything genuinely personal (e.g. the location of my Obsidian vault) is
   read from a local `.env` file, which is gitignored. See `.env.example` for
   the expected format — copy it to `.env` and fill in your own values.
+
+## License
+
+MIT, see [`LICENSE`](./LICENSE).
