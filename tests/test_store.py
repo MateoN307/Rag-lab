@@ -1,7 +1,10 @@
 import hashlib
 
+import ollama
 import pytest
 
+import store
+from embedder import cosine_similarity
 from store import _db_hashes, _disk_hashes, _hash_file, _open_collection
 
 
@@ -146,3 +149,157 @@ def test_db_hashes_one_entry_per_note(tmp_path):
 def test_db_hashes_empty_collection(tmp_path):
     """Nothing stored gives an empty dict."""
     assert _db_hashes(_open_collection(str(tmp_path / "db"))) == {}
+
+
+#### build_index and query_index ####
+# These use a fake embed_text so they run instantly and never call Ollama.
+# store.py does `from embedder import embed_text`, which makes its own name
+# for the function, so the fake must replace store.embed_text specifically.
+
+CONTEXT_ERROR = "the input length exceeds the context length"
+
+
+def fake_vector(text):
+    """A tiny 2-number vector: how much the text is about apples vs cars."""
+    return [text.count("apple") + 0.1, text.count("car") + 0.1]
+
+
+@pytest.fixture
+def fake_embed(monkeypatch):
+    """Replace the store's embed_text with fake_vector for one test."""
+    monkeypatch.setattr(store, "embed_text", fake_vector)
+
+
+@pytest.fixture
+def vault(tmp_path):
+    """An empty vault folder; tests add notes with write_note()."""
+    folder = tmp_path / "vault"
+    folder.mkdir()
+    return folder
+
+
+@pytest.fixture
+def db_dir(tmp_path):
+    return str(tmp_path / "db")
+
+
+def write_note(vault, name, text):
+    (vault / name).write_text(text, encoding="utf-8")
+
+
+def stored_texts(db_dir, source):
+    collection = _open_collection(db_dir)
+    return collection.get(where={"source": source}, include=["documents"])["documents"]
+
+
+def test_build_index_new_then_unchanged(fake_embed, vault, db_dir):
+    """A first run stores every note; a second run with no changes does nothing."""
+    write_note(vault, "a.md", "apple pie")
+    write_note(vault, "b.md", "fast car")
+
+    first = store.build_index(str(vault), db_dir)
+    second = store.build_index(str(vault), db_dir)
+
+    assert (first["new"], first["unchanged"]) == (2, 0)
+    assert (second["new"], second["edited"], second["deleted"], second["unchanged"]) == (0, 0, 0, 2)
+
+
+def test_build_index_edited_note(fake_embed, vault, db_dir):
+    """An edited note is re-stored, and its old text is gone."""
+    write_note(vault, "a.md", "old apple text")
+    store.build_index(str(vault), db_dir)
+
+    write_note(vault, "a.md", "new apple text")
+    summary = store.build_index(str(vault), db_dir)
+
+    assert summary["edited"] == 1
+    assert stored_texts(db_dir, "a.md") == ["new apple text"]
+
+
+def test_build_index_deleted_note(fake_embed, vault, db_dir):
+    """A note removed from the vault has its chunks removed from the database."""
+    write_note(vault, "a.md", "apple")
+    write_note(vault, "b.md", "car")
+    store.build_index(str(vault), db_dir)
+
+    (vault / "b.md").unlink()
+    summary = store.build_index(str(vault), db_dir)
+
+    assert summary["deleted"] == 1
+    assert stored_texts(db_dir, "b.md") == []
+    assert stored_texts(db_dir, "a.md") == ["apple"]
+
+
+def test_build_index_empty_note(fake_embed, vault, db_dir):
+    """A note with no chunks is listed only under "empty"."""
+    write_note(vault, "empty.md", "---\ntags: [x]\n---\n")
+    summary = store.build_index(str(vault), db_dir)
+
+    assert summary["empty"] == ["empty.md"]
+    assert summary["new"] == 0
+
+
+def test_build_index_shrinks_oversized_note(monkeypatch, vault, db_dir):
+    """If the model rejects chunks over 400 words, the note is re-chunked at 338."""
+
+    def rejects_long_texts(text):
+        if len(text.split()) > 400:
+            raise ollama.ResponseError(CONTEXT_ERROR, 400)
+        return [1.0, 1.0]
+
+    monkeypatch.setattr(store, "embed_text", rejects_long_texts)
+    write_note(vault, "long.md", " ".join(f"word{i}" for i in range(1000)))
+    summary = store.build_index(str(vault), db_dir)
+
+    assert summary["new"] == 1
+    assert summary["shrunk"] == {"long.md": 338}
+    assert max(len(t.split()) for t in stored_texts(db_dir, "long.md")) == 338
+
+
+def test_build_index_too_dense_note(monkeypatch, vault, db_dir):
+    """If no chunk size fits, the note is listed under "too_dense" and not stored."""
+
+    def rejects_everything(text):
+        raise ollama.ResponseError(CONTEXT_ERROR, 400)
+
+    monkeypatch.setattr(store, "embed_text", rejects_everything)
+    write_note(vault, "dense.md", "some text")
+    summary = store.build_index(str(vault), db_dir)
+
+    assert summary["too_dense"] == ["dense.md"]
+    assert summary["new"] == 0
+    assert stored_texts(db_dir, "dense.md") == []
+
+
+def test_build_index_other_errors_are_raised(monkeypatch, vault, db_dir):
+    """Any Ollama error other than the context-length one stops the build."""
+
+    def model_missing(text):
+        raise ollama.ResponseError("model not found", 404)
+
+    monkeypatch.setattr(store, "embed_text", model_missing)
+    write_note(vault, "a.md", "apple")
+
+    with pytest.raises(ollama.ResponseError, match="model not found"):
+        store.build_index(str(vault), db_dir)
+
+
+def test_build_index_requires_vault_path(db_dir):
+    """A missing vault path (VAULT_PATH not set) raises a clear error."""
+    with pytest.raises(ValueError, match="VAULT_PATH is not set"):
+        store.build_index(None, db_dir)
+
+
+def test_query_index_ranks_best_first(fake_embed, vault, db_dir):
+    """Results come back best first, with score = cosine similarity."""
+    write_note(vault, "apples.md", "apple apple apple")
+    write_note(vault, "cars.md", "car car car")
+    store.build_index(str(vault), db_dir)
+
+    results = store.query_index("apple", k=2, db_dir=db_dir)
+
+    assert [r.source for r in results] == ["apples.md", "cars.md"]
+    assert results[0].score == pytest.approx(
+        cosine_similarity(fake_vector("apple"), fake_vector("apple apple apple"))
+    )
+    assert results[0].score > results[1].score
