@@ -16,31 +16,39 @@ class Chunk:
     index: int
 
 
-def chunk_dir(dir_path: str) -> list[Chunk]:
+def chunk_dir(dir_path: str, skip: list[str] = ()) -> list[Chunk]:
     """
-    Process every .md file under `dir_path` (including subfolders) and
-    return a flat list of Chunk records.
+    Process every .md file under `dir_path` (including subfolders, except the
+    folders in `skip`) and return a flat list of Chunk records.
     """
     chunks = []
-    for source in find_md_files(dir_path):
+    for source in find_md_files(dir_path, skip):
         file_path = os.path.join(dir_path, source)
         chunks.extend(chunk_file(file_path, source))
 
     return chunks
 
 
-def find_md_files(dir_path: str) -> list[str]:
+def find_md_files(dir_path: str, skip: list[str] = ()) -> list[str]:
     """
     Walk `dir_path` and every folder inside it, and return the path of each
-    .md file found, relative to `dir_path` (e.g. "plans/trip.md").
+    .md file found, relative to `dir_path` (e.g. "plans/trip.md"). Folders
+    listed in `skip` (paths relative to `dir_path`) and everything inside
+    them are left out.
 
     This is the single definition of "the notes under a folder".
     """
     if not os.path.isdir(dir_path):
         raise ValueError(f"Not a directory: {dir_path}")
 
+    skipped = {os.path.normpath(folder) for folder in skip}
     sources = []
-    for current_dir, _, _ in os.walk(dir_path):
+    for current_dir, subdirs, _ in os.walk(dir_path):
+        # Removing a folder from `subdirs` in place stops os.walk going into it.
+        here = os.path.relpath(current_dir, dir_path)
+        subdirs[:] = [
+            d for d in subdirs if os.path.normpath(os.path.join(here, d)) not in skipped
+        ]
         for file_path in _md_files_in_folder(current_dir):
             sources.append(os.path.relpath(file_path, dir_path))
 

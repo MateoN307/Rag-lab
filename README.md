@@ -14,17 +14,22 @@ overall flow:
 chunk -> embed -> store -> retrieve -> inject -> answer
 ```
 
-1. **`chunker.py`** — walks a directory of markdown notes (my personal
-   Obsidian vault), cleans each note up (strips frontmatter, resolves
-   `[[wiki links]]`, removes `![[image embeds]]`), and splits the cleaned
-   text into overlapping word-based chunks ready to be embedded.
+1. **`chunker.py`** *(done)* — walks a directory of markdown notes (my
+   personal Obsidian vault), cleans each note up (strips frontmatter, resolves
+   `[[wiki links]]`, removes `![[image embeds]]` and table separator rows), and
+   splits the cleaned text into overlapping word-based chunks ready to be
+   embedded.
 2. **`embedder.py`** *(done)* — turns each chunk's text into a vector
-   embedding using an embedding model.
-3. **`store.py`** *(in progress)* — stores the embedded chunks (plus their
-   metadata) so they can be searched later.
-4. **`rag.py`** *(planned)* — ties it all together: takes a question, finds
-   the most relevant chunks, injects them into a prompt, and gets an answer
-   from an LLM.
+   embedding using a local embedding model (`nomic-embed-text` via Ollama).
+3. **`store.py`** *(done)* — keeps a persistent vector index (Chroma) in sync
+   with the vault, re-embedding only the notes that changed, and finds the
+   chunks most similar to a question.
+4. **`rag.py`** *(done)* — takes a question, retrieves the most relevant
+   chunks, and asks a local LLM (`llama3.1:8b` via Ollama) to answer from
+   them, showing which notes it used and how much it trusts each one.
+5. **`scripts/evaluate.py`** *(done)* — scores the whole pipeline against a
+   fixed set of questions, so every change is measured instead of judged by
+   eye.
 
 Specs for each stage live in [`design/`](./design).
 
@@ -46,12 +51,60 @@ AI here is intentionally narrow:
 The full set of ground rules for this collaboration is written out in
 [`design/collaboration_mode.md`](./design/collaboration_mode.md).
 
+## Running it
+
+Everything runs locally: no API keys, and nothing leaves the machine.
+
+1. Install [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com),
+   then pull the two models:
+   ```
+   ollama pull nomic-embed-text
+   ollama pull llama3.1:8b
+   ```
+2. Install the dependencies, and point the project at your notes by copying
+   `.env.example` to `.env` and setting `VAULT_PATH`:
+   ```
+   uv sync
+   ```
+3. Ask questions (the first run indexes the vault; later runs only re-index
+   notes that changed):
+   ```
+   uv run python app/rag.py
+   ```
+4. Run the tests, or score the pipeline against your own evaluation set (see
+   `design/stage5_evaluation.md`):
+   ```
+   uv run pytest
+   uv run python scripts/evaluate.py --name my-run --answers
+   ```
+
+## Results
+
+Measured on 32 questions about my notes (24 answerable, 8 not):
+
+| What | Result |
+|---|---|
+| Search finds a right note in the top 5 | 83% of answerable questions |
+| Key facts in the answer, when search found the note | 94% (`llama3.1:8b`, prompt v1) |
+| Answers ending in a correct Sources section | 100% (prompt v2, the default) |
+| Questions the notes can't answer, admitted as such | 100% |
+
+What measuring taught me:
+- **A bigger model followed the rules a smaller one couldn't.** Extra prompt
+  rules made the 3B model worse at everything; the 8B model used them to
+  reach 100% correctly formatted sources.
+- **More context isn't better.** Five excerpts beat three (missing facts) and
+  ten (the model lost focus).
+- **Silent failures hide in the plumbing.** Ollama's default context window
+  was quietly cutting the longest prompts, instructions included. Fixing it,
+  and flagging truncation, raised the format score from 94% to 100%.
+
 ## Project layout
 
 ```
 app/        the actual pipeline code (chunker.py, etc.)
 design/     design specs for each stage, plus the AI collaboration rules
-scripts/    small helper/dev tools (e.g. test-fixture generators)
+scripts/    small helper/dev tools (test-fixture generator, evaluation script)
 tests/      pytest tests (run with uv run pytest) and the fixture files they read
 ```
 

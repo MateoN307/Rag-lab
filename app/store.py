@@ -21,6 +21,8 @@ SHRINK_FACTOR = 0.75
 MIN_CHUNK_WORDS = 20
 
 VAULT_PATH = os.environ.get("VAULT_PATH")
+# Folders (relative to the vault) left out of the index, separated by ";".
+SKIP_FOLDERS = [f for f in os.environ.get("SKIP_FOLDERS", "").split(";") if f.strip()]
 
 
 @dataclass
@@ -31,9 +33,12 @@ class SearchResult:
     score: float
 
 
-def build_index(vault_path: str = VAULT_PATH, db_dir: str = DB_DIR) -> dict:
+def build_index(
+    vault_path: str = VAULT_PATH, db_dir: str = DB_DIR, skip: list[str] = SKIP_FOLDERS
+) -> dict:
     """
-    Bring the database at `db_dir` in line with the notes in `vault_path`:
+    Bring the database at `db_dir` in line with the notes in `vault_path`
+    (except those inside the folders in `skip`):
     store new notes, re-store edited ones, remove deleted ones, and skip
     unchanged ones (compared by each note's fingerprint).
 
@@ -45,7 +50,7 @@ def build_index(vault_path: str = VAULT_PATH, db_dir: str = DB_DIR) -> dict:
     if not vault_path:
         raise ValueError("VAULT_PATH is not set; add it to .env")
 
-    on_disk = _disk_hashes(vault_path, find_md_files(vault_path))
+    on_disk = _disk_hashes(vault_path, find_md_files(vault_path, skip))
     collection = _open_collection(db_dir)
     in_store = _db_hashes(collection)
 
@@ -233,10 +238,13 @@ if __name__ == "__main__":
     if summary["too_dense"]:
         print(f"Too dense to store: {summary['too_dense']}")
 
-    while True:
-        question = input("\nQuestion (empty line to quit): ").strip()
-        if not question:
-            break
-        for result in query_index(question):
-            print(f"{result.score:.3f}  {result.source}#{result.index}")
-            print(f"       {result.text[:100]!r}")
+    try:
+        while True:
+            question = input("\nQuestion (empty line to quit): ").strip()
+            if not question:
+                break
+            for result in query_index(question):
+                print(f"{result.score:.3f}  {result.source}#{result.index}")
+                print(f"       {result.text[:100]!r}")
+    except (KeyboardInterrupt, EOFError):
+        print("\nBye.")

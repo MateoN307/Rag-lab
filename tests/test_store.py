@@ -303,3 +303,17 @@ def test_query_index_ranks_best_first(fake_embed, vault, db_dir):
         cosine_similarity(fake_vector("apple"), fake_vector("apple apple apple"))
     )
     assert results[0].score > results[1].score
+
+
+def test_build_index_skipped_folder_is_removed(fake_embed, vault, db_dir):
+    """Notes in a folder that becomes skipped are removed on the next build."""
+    (vault / "templates").mkdir()
+    write_note(vault, "templates/t.md", "car template")
+    write_note(vault, "a.md", "apple")
+    store.build_index(str(vault), db_dir, skip=[])
+
+    summary = store.build_index(str(vault), db_dir, skip=["templates"])
+
+    assert summary["deleted"] == 1
+    assert stored_texts(db_dir, "templates/t.md") == []
+    assert stored_texts(db_dir, "a.md") == ["apple"]

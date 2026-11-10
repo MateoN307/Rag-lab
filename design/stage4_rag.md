@@ -60,3 +60,39 @@ These are the actual payoff of building this yourself — go poke at it:
   irrelevant context ever *hurt* the answer rather than help it?
 - (Stretch) Try re-ranking: retrieve more candidates than you need, reorder
   them by some heuristic, and only inject the best few — does it help?
+
+## Design decisions (November 2026)
+**Contract.** `answer(question, k=5, db_dir, prompt_version, model)` returns
+`Answer(text, sources, truncated)`: the model's text, the chunks it was given,
+and whether the prompt had to be cut.
+
+**Prompt.** A system message holds the rules: answer only from the excerpts;
+judge whether each one states the answer directly, implies it, or is
+unrelated; sound confident only for direct, high-match evidence; admit when
+the notes don't answer; reply in the question's language; end with a Sources
+section. The user message holds the numbered excerpts (match level, note
+path, text), then the question. *Considered and rejected:* giving the model
+raw scores, which a small model can't interpret, so code turns them into
+high, medium or low; and having the model write note paths, which small
+models garble, so it cites excerpt numbers and the app prints the real paths.
+
+**Match labels are hints, not a threshold.** High ≥ 0.55, medium ≥ 0.50,
+otherwise low, provisional. The evaluation showed why no score cutoff can
+decide relevance on its own: unanswerable questions reached 0.630 while the
+median answerable question's top score was 0.630, mostly because a Spanish
+question scores high against any Spanish note.
+
+**Model, prompt and k were chosen by measurement** (see the Stage 5
+results): `llama3.1:8b` over `llama3.2` (3B); prompt v2 as the default,
+trading about 7 points of key facts for perfect Sources formatting and twice
+as many honest "Sources: none"; and k = 5 over 3 and 10.
+
+**Context window 16,384 tokens.** Ollama's default of 4,096 silently cut the
+longest prompts, starting from the beginning, which is where the rules are.
+The window is now set explicitly, and any prompt that still fills it is
+reported as truncated. Temperature is 0, so the same question gets the same
+answer and prompt versions can be compared fairly.
+
+**Future work.** Optionally adding the model's general knowledge in a
+separate, clearly labelled section, and an automatic judge to replace phrase
+matching in the evaluation.

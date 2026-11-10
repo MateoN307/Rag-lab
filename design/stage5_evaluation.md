@@ -98,6 +98,27 @@ by hand.
   anyone can clone the project and reproduce the results.
 - A license when the repository goes public.
 
+## Results (November 2026)
+Retrieval (32 questions): hit@5 83%, hit@10 88%, MRR 0.605. Leaving out the
+templates didn't change these, but removed 6 template chunks from the top-5
+context.
+
+| Model | Prompt | k | Window | Key facts | Sources format | Admitted | "Sources: none" |
+|---|---|---|---|---|---|---|---|
+| llama3.2 (3B) | v1 | 5 | 4,096 | 72% | 66% | 100% | 0% |
+| llama3.2 (3B) | v2 | 5 | 4,096 | 64% | 59% | 100% | 0% |
+| llama3.1 (8B) | v1 | 5 | 16,384 | 79% | 84% | 100% | 25% |
+| llama3.1 (8B) | **v2** | **5** | 16,384 | 72% | **100%** | 100% | **50%** |
+| llama3.1 (8B) | v2 | 3 | 16,384 | 62% | 100% | 100% | 50% |
+| llama3.1 (8B) | v2 | 10 | 16,384 | 59% | 94% | 100% | 12% |
+| llama3.1 (8B) | v3 | 5 | 16,384 | 77% | 94% | 100% | 62% |
+
+When search put the right note in the top 5 (20 of 24 answerable questions),
+the 8B model with v1 found 94% of the key facts. When it didn't, every
+configuration got about 14%. Search, not the model, is now the main limit.
+The answer checks match phrases, which missed correct admissions three times
+(fixed by hand each time); an automatic judge is the planned replacement.
+
 ## Decided
 - **Evaluation-set format:** JSON, as above.
 - **Where the evaluation script lives:** `scripts/evaluate.py`. It measures

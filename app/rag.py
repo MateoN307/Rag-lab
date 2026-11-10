@@ -81,9 +81,20 @@ colour is red", answer confidently that it's red. If the excerpts only mention \
 liking red cars, red books and red computers, say my notes suggest red, \
 without stating it as fact."""
 
+# v3 is v1 with only its rule 6 replaced by v2's literal Sources template.
+_V1_RULE_6 = """6. End with a "Sources" section listing each excerpt you used: its number, \
+your trust in it (high, medium or low) and whether it answers directly or by \
+implication."""
+_V2_RULE_6 = """6. End with a sources section in exactly this format, one line per excerpt \
+you used:
+Sources:
+[number] trust: high/medium/low, answers: directly/by implication
+If you used no excerpt, write "Sources: none"."""
+_PROMPT_V3 = _PROMPT_V1.replace(_V1_RULE_6, _V2_RULE_6)
+
 # System prompts by version name; DEFAULT_PROMPT_VERSION is what answer() uses
 # unless told otherwise.
-PROMPTS = {"v1": _PROMPT_V1, "v2": _PROMPT_V2}
+PROMPTS = {"v1": _PROMPT_V1, "v2": _PROMPT_V2, "v3": _PROMPT_V3}
 DEFAULT_PROMPT_VERSION = "v2"
 
 
@@ -157,18 +168,21 @@ if __name__ == "__main__":
         f"{summary['deleted']} deleted, {summary['unchanged']} unchanged"
     )
 
-    while True:
-        question = input("\nQuestion (empty line to quit): ").strip()
-        if not question:
-            break
+    try:
+        while True:
+            question = input("\nQuestion (empty line to quit): ").strip()
+            if not question:
+                break
 
-        result = answer(question)
-        print("\nRetrieved from your notes:")
-        for number, source in enumerate(result.sources, start=1):
-            print(
-                f"  [{number}] {source.score:.3f} ({_match_level(source.score)}) "
-                f"{source.source}#{source.index}"
-            )
-        if result.truncated:
-            print("\nWarning: the prompt was cut to fit the context window.")
-        print(f"\nAnswer:\n{result.text}")
+            result = answer(question)
+            print("\nRetrieved from your notes:")
+            for number, source in enumerate(result.sources, start=1):
+                print(
+                    f"  [{number}] {source.score:.3f} ({_match_level(source.score)}) "
+                    f"{source.source}#{source.index}"
+                )
+            if result.truncated:
+                print("\nWarning: the prompt was cut to fit the context window.")
+            print(f"\nAnswer:\n{result.text}")
+    except (KeyboardInterrupt, EOFError):
+        print("\nBye.")

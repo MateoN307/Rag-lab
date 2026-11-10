@@ -394,3 +394,25 @@ def test_find_md_files_rejects_missing_folder(tmp_path):
     """A path that doesn't exist raises ValueError."""
     with pytest.raises(ValueError, match="Not a directory"):
         find_md_files(str(tmp_path / "does_not_exist"))
+
+
+FIND_MD_FILES_SKIP_CASES = {
+    "skip_nested_folder": (["a/b"], ["a/x.md", "c/z.md"]),
+    "skip_folder_and_everything_inside": (["a"], ["c/z.md"]),
+    "skip_folder_that_does_not_exist": (["nope"], ["a/x.md", "a/b/y.md", "c/z.md"]),
+    "nothing_skipped": ([], ["a/x.md", "a/b/y.md", "c/z.md"]),
+}
+
+
+@pytest.mark.parametrize(
+    "skip, expected",
+    FIND_MD_FILES_SKIP_CASES.values(),
+    ids=FIND_MD_FILES_SKIP_CASES.keys(),
+)
+def test_find_md_files_skip(skip, expected, tmp_path):
+    for folder in ["a", "a/b", "c"]:
+        (tmp_path / folder).mkdir()
+    for name in ["a/x.md", "a/b/y.md", "c/z.md"]:
+        (tmp_path / name).write_text("")
+
+    assert sorted(find_md_files(str(tmp_path), skip)) == sorted(expected)
