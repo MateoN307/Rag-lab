@@ -11,7 +11,7 @@ GENERATION_MODEL = "llama3.2"
 HIGH_MATCH = 0.55
 MEDIUM_MATCH = 0.50
 
-SYSTEM_PROMPT = """\
+_PROMPT_V1 = """\
 You answer questions using excerpts from my personal Obsidian notes.
 
 About the excerpts:
@@ -43,6 +43,46 @@ colour is red", answer confidently that it's red. If the excerpts only mention \
 liking red cars, red books and red computers, say my notes suggest red, \
 without stating it as fact."""
 
+_PROMPT_V2 = """\
+You answer questions using excerpts from my personal Obsidian notes.
+
+About the excerpts:
+- They come from an incomplete collection of my notes, found by an imperfect \
+similarity search, so the answer may not be in them at all.
+- Each excerpt has a number and a match level (high, medium or low). The match \
+level says how close its topic is to the question, not whether it answers it.
+- One answer can be split across several excerpts; combine them when they fit \
+together.
+
+How to answer:
+1. Use only the information in the excerpts. Do not add facts from your own \
+knowledge. Use the excerpts' own words for names and items: if you don't know \
+what something is, repeat it as written instead of guessing what it means.
+2. For each excerpt, judge whether it states the answer directly, only implies \
+it, or is unrelated. Ignore unrelated ones.
+3. Sound confident only when a high-match excerpt states the answer directly. \
+If the answer is only implied, or comes from medium or low matches, say so \
+("my notes suggest..."). Otherwise, never claim to be certain.
+4. Only if no excerpt answers the question: say you couldn't find it in my \
+notes, and if something related came up, mention it as "this is what I found, \
+but it probably isn't what you're looking for".
+5. Answer in the language of the question, briefly.
+6. End with a sources section in exactly this format, one line per excerpt \
+you used:
+Sources:
+[number] trust: high/medium/low, answers: directly/by implication
+If you used no excerpt, write "Sources: none".
+
+Example: for "What is my favourite colour?", if an excerpt says "my favourite \
+colour is red", answer confidently that it's red. If the excerpts only mention \
+liking red cars, red books and red computers, say my notes suggest red, \
+without stating it as fact."""
+
+# System prompts by version name; DEFAULT_PROMPT_VERSION is what answer() uses
+# unless told otherwise.
+PROMPTS = {"v1": _PROMPT_V1, "v2": _PROMPT_V2}
+DEFAULT_PROMPT_VERSION = "v2"
+
 
 @dataclass
 class Answer:
@@ -50,16 +90,23 @@ class Answer:
     sources: list[SearchResult]
 
 
-def answer(question: str, k: int = 5, db_dir: str = DB_DIR) -> Answer:
+def answer(
+    question: str,
+    k: int = 5,
+    db_dir: str = DB_DIR,
+    prompt_version: str = DEFAULT_PROMPT_VERSION,
+    model: str = GENERATION_MODEL,
+) -> Answer:
     """
-    Retrieve the `k` chunks closest to `question`, ask the local LLM to answer
-    from them, and return the answer together with those chunks.
+    Retrieve the `k` chunks closest to `question`, ask `model` to answer from
+    them using the system prompt PROMPTS[prompt_version], and return the
+    answer together with those chunks.
     """
     sources = query_index(question, k, db_dir)
     response = ollama.chat(
-        model=GENERATION_MODEL,
+        model=model,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": PROMPTS[prompt_version]},
             {"role": "user", "content": _build_user_message(question, sources)},
         ],
         options={"temperature": 0},

@@ -80,5 +80,8 @@ def test_answer_sends_rules_and_excerpts_and_returns_both(monkeypatch):
     assert reply.sources == found
     assert sent["model"] == rag.GENERATION_MODEL
     assert sent["options"] == {"temperature": 0}
-    assert sent["messages"][0] == {"role": "system", "content": rag.SYSTEM_PROMPT}
+    assert sent["messages"][0] == {
+        "role": "system",
+        "content": rag.PROMPTS[rag.DEFAULT_PROMPT_VERSION],
+    }
     assert sent["messages"][1]["content"].endswith("Question: When is the ferry?")
